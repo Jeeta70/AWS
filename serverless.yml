@@ -1,0 +1,159 @@
+service: backend
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: dev
+  region: ap-south-1
+
+plugins:
+  - serverless-iam-roles-per-function
+
+functions:
+  #createData
+  createCertificate:
+    handler: api/create.certificate
+    environment:
+      CREATE_TABLE_NAME: !Ref certificateTable
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    iamRoleStatements:
+      - Effect: "Allow"
+        Action:
+          - "dynamodb:PutItem"
+        Resource: !GetAtt certificateTable.Arn
+    events:
+      - http:
+          method: post
+          path: certificateList
+          cors:
+            origin: "*"
+            headers: ${self.custom.allowedHeaders}
+
+  #getUserSpecificData
+  getUserSpecificData:
+    handler: api/userData.certificate
+    environment:
+      CREATE_TABLE_NAME: !Ref certificateTable
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    iamRoleStatements:
+      - Effect: "Allow"
+        Action:
+          - "dynamodb:Scan"
+        Resource: !GetAtt certificateTable.Arn
+    events:
+      - http:
+          method: get
+          path: certificateList
+          cors:
+            origin: "*"
+            headers: ${self.custom.allowedHeaders}
+
+  #updateData
+  updateData:
+    handler: api/update.certificate
+    environment:
+      CREATE_TABLE_NAME: !Ref certificateTable
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    iamRoleStatements:
+      - Effect: "Allow"
+        Action:
+          - "dynamodb:UpdateItem"
+        Resource: !GetAtt certificateTable.Arn
+    events:
+      - http:
+          method: put
+          path: certificateList/{certificate_id}
+          cors:
+            origin: "*"
+            headers: ${self.custom.allowedHeaders}
+  #deleteRequest
+  deleteRequest:
+    handler: api/deleteFlag.certificate
+    environment:
+      CREATE_TABLE_NAME: !Ref certificateTable
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    iamRoleStatements:
+      - Effect: "Allow"
+        Action:
+          - "dynamodb:UpdateItem"
+        Resource: !GetAtt certificateTable.Arn
+    events:
+      - http:
+          method: put
+          path: certificateList/deleteFlag/{certificate_id}
+          cors:
+            origin: "*"
+            headers: ${self.custom.allowedHeaders}
+  #Admin
+  #getAllData
+  getAllData:
+    handler: api/getAllCertificates.certificate
+    environment:
+      CREATE_TABLE_NAME: !Ref certificateTable
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    iamRoleStatements:
+      - Effect: "Allow"
+        Action:
+          - "dynamodb:Scan"
+        Resource: !GetAtt certificateTable.Arn
+    events:
+      - http:
+          method: get
+          path: certificateList/getallcertificates
+          cors:
+            origin: "*"
+            headers: ${self.custom.allowedHeaders}
+            
+  #getDeleteData
+  getDeleteData:
+    handler: api/deleteData.certificate
+    environment:
+      CREATE_TABLE_NAME: !Ref certificateTable
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    iamRoleStatements:
+      - Effect: "Allow"
+        Action:
+          - "dynamodb:Scan"
+        Resource: !GetAtt certificateTable.Arn
+    events:
+      - http:
+          method: get
+          path: certificateList/deletedata
+          cors:
+            origin: "*"
+            headers: ${self.custom.allowedHeaders}
+  
+  #deleteCertificate
+  deleteCertificate:
+    handler: api/deleteCertificate.certificate
+    environment:
+      CREATE_TABLE_NAME: !Ref certificateTable
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    iamRoleStatements:  
+      - Effect: "Allow"
+        Action:
+          - "dynamodb:DeleteItem"
+        Resource: !GetAtt certificateTable.Arn
+    events:
+      - http:
+          method: delete
+          path: certificateList/deleteCertificate/{certificate_id}
+          cors:
+            origin: "*"
+            headers: ${self.custom.allowedHeaders}
+
+
+resources:
+  Resources:
+    certificateTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: certificateTable
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: certificate_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: certificate_id
+            KeyType: HASH
